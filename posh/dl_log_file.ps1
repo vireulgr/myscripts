@@ -1,9 +1,9 @@
-param( [string]$logName = '20160603_BB_FP_2578_BPfanedler_M060_C2_E230.500_16223AC2_Driving_Test', 
+param( [string]$logName = 'log_file_template', 
         [int]$year = [int]$(get-date -UFormat "%Y"), 
         [int]$weekNum = [int]$(get-date -UFormat "%W") )
 
-#$logName        = '20160603_BB_FP_2578_BPfanedler_M060_C2_E230.500_16223AC2_Driving_Test'
-$stabNetDir     = '\\OEFIW3FS05.hbi.ad.harman.com\Archivetraces\DC\NTG5\stability'
+#$logName        = 'log_name'
+$stabNetDir     = '\\remote-server\stability'
 $stabLocalDir   = 'G:\LogDir'
 
 $yearDir        = $year #'2016'
