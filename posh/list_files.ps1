@@ -1,7 +1,7 @@
-# выбрать файлы .hpp и .cpp из директории 
+# ГўГ»ГЎГ°Г ГІГј ГґГ Г©Г«Г» .hpp ГЁ .cpp ГЁГ§ Г¤ГЁГ°ГҐГЄГІГ®Г°ГЁГЁ 
 
 [string]$PATTERN='\.cpp$|\.hpp$'
-[string]$PATH='F:\HarmanSystem\p4\Work_System\Work_System\imp\ntg5\pathology'
+[string]$PATH='F:\path\to\files'
 [string]$OUT_FILE='.\filelist.txt'
 
 Get-Childitem -path $PATH -recurse | Where-Object {$_.name -match $PATTERN} | Select-Object FullName | Out-File $OUT_FILE -encoding "UTF8" 
