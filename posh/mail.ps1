@@ -4,7 +4,7 @@
 $FolderName = 'Stability'
 
 # DTB mail patterns: 
-$DTBLogPathPat = '//OEFIW3FS05.hbi.ad.harman.com/Archivetraces/Dc/Ntg5/stability'
+$DTBLogPathPat = '//server-name/stability'
 
 # Elvis mail patterns
 $ElvisLogTicketPat = 'Ticket:'
@@ -58,12 +58,12 @@ if ( $DTBLogs ) {
 [int[]]$ticketNumbers = @();
 
 # Elvis ticket mails processing
-$ElvisLogs = $StabilityMail | ? { $_.Subject -match "ELVIS: PROCESSING.*Project: DAI_NTG5.*" }
+$ElvisLogs = $StabilityMail | ? { $_.Subject -match "*subj*" }
 
 if ( $ElvisLogs ) {
     ForEach ( $mail in $ElvisLogs ) {
 
-        $patt =  "^.*$ElvisLogTicketPat[\t ]?(\d+).*$"
+        $patt =  "^.*$LogTicketPat[\t ]?(\d+).*$"
         [int[]]$ticketNumbers += $( $mail.Subject -replace $patt,'$1' ) 
     }
 
