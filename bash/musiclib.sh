@@ -5,6 +5,8 @@ texts_dir="${files_dir}/texts"
 backup_dir="${HOME}/muzbackup"
 history_file="${files_dir}/history"
 
+g_wasCmdCmpl=0
+
 #######
 # FUNCTIONS
 #######
@@ -12,18 +14,21 @@ function addFile() {
     # 1 - filename
     if [ ! -f $1 ]; then
         echo "[E] file $1 not exists or is not a regular file!"
+        g_wasCmdCmpl=0
         return
     fi
     # check extension
     fileMime=$(file -b --mime-type $1)
     if [[ ! 'audio/mpeg audio/x-flac audio/x-wav' =~ $fileMime ]]; then 
         echo "[E] file $1 is $fileMime and cannot be put in library"
+        g_wasCmdCmpl=0
         return
     fi
     # check size
     fileSize=$(du -s $1 | cut -f1)
     if [ $fileSize -gt 10240 ]; then
         echo "[E] file $1 is $fileSize Kb is too large!"
+        g_wasCmdCmpl=0
         return
     fi
 
@@ -39,55 +44,105 @@ function addFile() {
             read -p "Enter new name: " ans
             newName="${files_dir}/$ans"
         else
+            g_wasCmdCmpl=0
             return;
         fi
     done
     
     cp $1 $newName
     echo "File $1 was added as $newName"
-    
+    g_wasCmdCmpl=1
 }
 
+function deleteFile() {
+    songFile="${files_dir}/$(basename $1)" 
+
+    if [ ! -f "$songFile" ]; then
+        echo "[E] File $FileName is not exists in library"
+        g_wasCmdCmpl=0
+        return;
+    fi
+    
+    ans=''
+
+    read -p "Do you want to delete file $songFile" ans
+
+    if [[ ! $ans =~ ^[Yy]$ ]]; then
+        g_wasCmdCmpl=0
+        return
+    fi
+
+    textFile="${texts_dir}/$(basename $1).txt"
+
+    if [ -f "$textFile" ]; then
+        rm $textFile
+    fi
+
+    rm $songFile
+
+    g_wasCmdCmpl=1
+}
+
+function getFile() {
+    # 1 - filename
+    fileName=$(basename $1)
+
+    if [ ! -f "${files_dir}/${fileName}" ]; then
+        echo "[E] File $fileName is not exists in library"
+        return;
+        g_wasCmdCmpl=0
+    fi
+
+    cp "${files_dir}/${fileName}" .
+
+    echo "File $fileName was copied in current directory"
+
+    g_wasCmdCmpl=1
+}
 
 function addText() {
 
-    newFile="${files_dir}/$(basename $1).txt"
+    if [ ! -f "${files_dir}/$(basename $1)" ]; then
+        echo "[E] File $FileName is not exists in library"
+        g_wasCmdCmpl=0
+        return;
+    fi
+
+    newFile="${texts_dir}/$(basename $1).txt"
+
     if [ -f "$newFile" ]; then
-        echo "[W] File exists, want to overwrite current file?"
-        echo "TODO implement"
-    
-    else
-        # cp $1 $files_dir
-        echo "Adding file cp $1 $files_dir"
+        echo "[W] File $newFile exists in library"
+        ans=''
+        read -p "Do you want to overwrite current file? " ans
+
+        if [[ ! $ans =~ ^[Yy]$ ]]; then
+            return;
+            g_wasCmdCmpl=0
+        fi
     fi
 
     echo "Please enter song text; stop-word is 'end_of_song'"
     temp='';
     line='';
+    read line
     while [ "$line" != "end_of_song" ]; do
         temp="$temp\r\n$line"   
         read line
     done
-    echo "$temp" > $newFile
+    echo -n -e "$temp" > $newFile
 
     echo "Text to file $1 was added as $newFile"
+    g_wasCmdCmpl=1
 }
 
-function getFile() {
-    # 1 - filename
-    FileName=$(basename $1)
-
-    if [ ! -f "${files_dir}/${FileName}" ]; then
-        echo "[E] File $FileName is not exists in library"
-        return;
-    else
-        cp $1 .
-    fi
-}
 
 function searchSong() {
     # $1 - quoted pattern
-    find "$files_dir" -name "$1"
+    # pushd "$files_dir" > /dev/null 2>&1
+    # find . -maxdepth 1 -name "*$1*" -printf "%f\n"
+    # popd > /dev/null 2>&1
+
+    find "$files_dir"  -maxdepth 1 -name "*$1*" -printf "%f\n"
 }
 
 function searchText() {
@@ -111,7 +166,9 @@ function unsetBackup() {
 }
 
 function doBackup() {
-    tar czf "$backup_dir/bkup_$(date +%d%m%y_%s).tar.gz" "$files_dir"
+    pushd "$files_dir" > /dev/null 2>&1
+    tar czf "$backup_dir/bkup_$(date +%d%m%y_%s).tar.gz" .
+    popd > /dev/null 2>&1
     echo "Backup is done"
 }
 
@@ -139,7 +196,7 @@ function printUsage() {
 		
 		--setup
 		
-		--add-text
+		--add-text <song name>
 		
 		File operations
 		--add <file>
@@ -161,42 +218,114 @@ HEREDOC
 #######
 # ENtry point
 #######
-
 case $1 in
     --add)
-    addFile "$2"
-    journal "$1" "$2"
+        if [ $# -lt 2 ]; then
+            printUsage
+            exit
+        fi
+        if [ ! -d "$files_dir" ]; then
+            echo "$files_dir is not present. Maybe you need to do --setup"
+        fi
+        addFile "$2"
+        if [ "$g_wasCmdCmpl" -gt 0 ]; then
+            journal "$1" "$2"
+        fi
     ;;
+
     --get)
-    getFile "$2"
-    journal "$1" "$2"
+        if [ $# -lt 2 ]; then
+            printUsage
+            exit
+        fi
+        if [ ! -d "$files_dir" ]; then
+            echo "$files_dir is not present. Maybe you need to do --setup"
+        fi
+        getFile "$2"
+        if [ "$g_wasCmdCmpl" -gt 0 ]; then
+            journal "$1" "$2"
+        fi
     ;;
+
     --del)
-    deleteFile "$2"
-    journal "$1" "$2"
+        if [ $# -lt 2 ]; then
+            printUsage
+            exit
+        fi
+        if [ ! -d "$files_dir" ]; then
+            echo "Directory $files_dir is not present. Maybe you need to do --setup?"
+        fi
+        deleteFile "$2"
+        if [ "$g_wasCmdCmpl" -gt 0 ]; then
+            journal "$1" "$2"
+        fi
     ;;
+
     --add-text)
-    addText "$2"
+        if [ $# -lt 2 ]; then
+            printUsage
+            exit
+        fi
+        if [ ! -d "$files_dir" ]; then
+            echo "$files_dir is not present. Maybe you need to do --setup"
+        fi
+        if [ ! -d "$texts_dir" ]; then
+            echo "$texts_dir is not present. Maybe you need to do --setup"
+        fi
+        addText "$2"
     ;;
+
     --search-song)
-    searchSong "$1"
+        if [ $# -lt 2 ]; then
+            printUsage
+            exit
+        fi
+        if [ ! -d "$files_dir" ]; then
+            echo "$files_dir is not present. Maybe you need to do --setup"
+        fi
+        searchSong "$2"
     ;;
+
     --search-text)
-    searchText "$1"
+        if [ $# -lt 2 ]; then
+            printUsage
+            exit
+        fi
+        if [ ! -d "$texts_dir" ]; then
+            echo "$texts_dir is not present. Maybe you need to do --setup"
+        fi
+        searchText "$2"
     ;;
+
     --unset-backup)
-    unsetBackup
+        unsetBackup
     ;;
+
     --set-backup)
-    setBackup
+        if [ ! -d "$files_dir" ]; then
+            echo "$files_dir is not present. Maybe you need to do --setup"
+        fi
+        if [ ! -d "$backup_dir" ]; then
+            echo "$backup_dir is not present. Maybe you need to do --setup"
+        fi
+        setBackup
     ;;
+
     --do-backup)
-    doBackup
+        if [ ! -d "$files_dir" ]; then
+            echo "$files_dir is not present. Maybe you need to do --setup"
+        fi
+        if [ ! -d "$backup_dir" ]; then
+            echo "$backup_dir is not present. Maybe you need to do --setup"
+        fi
+        doBackup
     ;;
+
     --setup)
-    doSetup
+        doSetup
     ;;
+
     *)
-    printUsage
+        printUsage
     ;;
 esac
