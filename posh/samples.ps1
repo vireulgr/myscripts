@@ -1,7 +1,7 @@
 # get current PoSh version
-write-output $PSVersionTable.PSVersion
+Write-Output $PSVersionTable.PSVersion
 # display files only
-get-childitem .\ -Recurse | where-object {!$_.PSIsContainer} # | select fullname -first 10
+Get-ChildItem .\ -Recurse | where-object {!$_.PSIsContainer} # | select fullname -first 10
 
 # выбрать файлы .hpp и .cpp из директории 
 
@@ -9,12 +9,12 @@ get-childitem .\ -Recurse | where-object {!$_.PSIsContainer} # | select fullname
 [string]$PATH='F:\HarmanSystem\p4\Work_System\Work_System\imp\ntg5\pathology'
 [string]$OUT_FILE='.\filelist.txt'
 
-Get-Childitem -path $PATH -recurse | Where-Object {$_.Name -match $PATTERN} | Select-Object FullName | Out-File $OUT_FILE -encoding "UTF8" 
+Get-ChildItem -path $PATH -recurse | Where-Object {$_.Name -match $PATTERN} | Select-Object FullName | Out-File $OUT_FILE -encoding "UTF8" 
 
 
 # get directory size
 
-get-childitem -recurse | measure-object -sum Length
+Get-ChildItem -Recurse | Measure-Object -Sum Length
 
 
 # print pretty size
@@ -39,3 +39,31 @@ function FormatSize
     if( $kilo > 1 ) { echo $kilo + "Kb" }
     if( $bytes > 1 ) { echo $bytes + "bytes" }
 }
+
+# parse date from string
+$fileName = "20110324_rR_rR_6789_menainglessword_d169_L2K1016L241PV_Driving_Test"
+$Datestr = $fileName.split('_')[0]
+
+[DateTime]$dt = New-Object DateTime
+
+[DateTime]::TryParseExact( $DateStr, "yyyyMMdd", [System.Globalization.Cultureinfo]::InvariantCulture,
+                            [System.Globalization.DateTimeStyles]::None, [ref]$dt )
+
+
+# copy all files with the same name to one directory, renaming them
+$rootDir = 'F:\dir\target'
+$destDir = 'F:\tempDir\enumBins'
+
+$binAlias = 'filename'
+
+sl $rootDir
+$binaries = gci . -recurse -filter $binAlias | ? { !$_.psiscontainer } 
+
+new-item -itemtype Directory -Force -Path $destDir
+
+[int]$cnt = 0
+ForEach ( $binaries ) {
+    $cnt += 1
+    copy-item $_.fullname "$destDir\$($_.name)$cnt"  
+}
+

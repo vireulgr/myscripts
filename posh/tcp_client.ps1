@@ -3,7 +3,8 @@ param( [string] $IP = "127.0.0.1", [int] $port = 23, [string[]] $commands )
 #param( [string] $remoteHost = "localhost", [int] $port = 23, [string[]] $commands )
 
 try { ## Open the socket, and connect to the computer on the specified port
-	write-host "Connecting to $remoteHost on port $port"
+	#write-host "Connecting to $remoteHost on port $port"
+	write-host "Connecting to $IP on port $port"
 
   # ==================================================
   $address = [system.net.IPAddress]::Parse($IP) 
@@ -68,7 +69,8 @@ catch {
 
 	$dateTime = get-date
 
-	$errorOccurence = "Error occurred connecting to $remoteHost on $port at $dateTime"
+	#$errorOccurence = "Error occurred connecting to $remoteHost on $port at $dateTime"
+	$errorOccurence = "Error occurred connecting to $IP on $port at $dateTime"
 
 	write-host $errorOccurence
 }

@@ -4,8 +4,8 @@
 [string]$PATH = 'f:\logs\1826526'
 [string]$xtract_dir = 'out'
 
-$archives = ( Get-Childitem -path $PATH -recurse | Where-Object { $_.name -match $PATTERN -And -Not $_.PSIsContainer } )
-#$archives = ( Get-Childitem -path $PATH | Where-Object { $_.name -match $PATTERN -And -Not $_.PSIsContainer } )
+$archives = ( Get-ChildItem -path $PATH -recurse | Where-Object { $_.name -match $PATTERN -And -Not $_.PSIsContainer } )
+#$archives = ( Get-ChildItem -path $PATH | Where-Object { $_.name -match $PATTERN -And -Not $_.PSIsContainer } )
 
 # echo $archives
 
@@ -19,7 +19,7 @@ foreach ( $item in $archives )
         #write-host $subdir
     }
 
-    New-Item ".\$subdir" -itemtype directory
+    New-Item ".\$subdir" -ItemType directory
 
     #write-host $subdir
     [string]$cmnd1 = '-o".\' + $subdir + '"'

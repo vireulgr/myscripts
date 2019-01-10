@@ -1,6 +1,6 @@
 ## Connect-Computer.ps1
 ## Interact with a service on a remote TCP port
-# f:\distr\WinDump.exe -qNnXt host 10.13.15.133 and host HINNP59762.symphonyteleca.com and port 23 > packets.txt
+# f:\distr\WinDump.exe -qNnXt host 123.123.123.123 and host TheHost.domain.com and port 23 > packets.txt
 #
 #
 
@@ -9,10 +9,10 @@ param( [string] $remoteHost = "localhost", [int] $port = 23, [string[]] $command
 
 $TempLogFilePath = "Temp.log"
 
-Start-Transcript -Path "$TempLogFilePath"
+#Start-Transcript -Path "$TempLogFilePath"
 
 try { ## Open the socket, and connect to the computer on the specified port
-	write-host "Connecting to $remoteHost on port $port"
+	Write-host "Connecting to $remoteHost on port $port"
 	$socket = new-object System.Net.Sockets.TcpClient($remoteHost, $port)
 
 	if($socket -eq $null) {
@@ -24,9 +24,6 @@ try { ## Open the socket, and connect to the computer on the specified port
 
 	$stream = $socket.GetStream() 
     $writer = new-object System.IO.StreamWriter($stream)
-
-	$buffer = new-object System.Byte[] 1024
-	$encoding = new-object System.Text.AsciiEncoding
 
     $writer.Write( @( 0xff, 0xfb, 0x1f, 0xff, 0xfb, 0x20, 0xff, 0xfb, 0x18, 0xff, 0xfb, 0x27, 0xff, 0xfd, 0x01, 0xff, 0xfb, 0x03, 0xff, 0xfd, 0x03) )
     $writer.Flush()
@@ -92,15 +89,19 @@ try { ## Open the socket, and connect to the computer on the specified port
 
 	#Loop through $commands and execute one at a time.
 
+	$buffer = new-object System.Byte[] 1024
+	$encoding = new-object System.Text.AsciiEncoding
+
 	for($i=0; $i -lt $commands.Count; $i++) { ## Allow data to buffer for a bit start-sleep -m 500
 
-		## Read all the data available from the stream, writing it to the ## screen when done.
+		# Read all the data available from the stream, writing it to the 
+    # screen when done.
 		while($stream.DataAvailable) {
 			$read = $stream.Read($buffer, 0, 1024)
-			write-host -n ($encoding.GetString($buffer, 0, $read))
+			Write-host -n ($encoding.GetString($buffer, 0, $read))
 		}
 
-		write-host $commands[$i]
+		Write-host $commands[$i]
 		## Write the command to the remote host
 		$writer.WriteLine($commands[$i]) 
         $writer.Flush()
@@ -134,11 +135,11 @@ catch {
 }
 
 finally {
-	## Close the streams
-	## Cleans everything up.
+	# Close the streams
+	# Cleans everything up.
     Write-host "Finally"
 	$writer.Close()
 	$stream.Close()
 
-	stop-transcript
+	#stop-transcript
 }

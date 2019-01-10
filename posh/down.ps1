@@ -3,7 +3,7 @@
 #
 param( [string]$buildVersion )
 
-$versionPattern = "[PR]L_DLC_[0-9]{3}.[0-9]{2}[0-9a-z]_[0-9A-Z]{8}"
+$versionPattern = "[PR]K_PCA_[0-9]{3}.[0-9]{2}[0-9a-z]_[0-9A-Z]{8}"
 $userAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36" 
 
 # getting proxy credentials
@@ -26,7 +26,6 @@ write "Current read as: $current"
 $request = New-Object System.Net.WebClient
 $request.UseDefaultCredentials = $true              # proxy credentials only
 $request.Proxy.Credentials = $request.Credentials
-
 
 $url = "http://servername.com/cgi-bin/script.pl?current=$current"
 $out = "F:\\docs\\ps_down_file.html"
