@@ -1,5 +1,29 @@
 #!/bin/bash
 
+# ///////////////////////
+# Working with arrays
+
+# CLUSTER_CONF file:
+#cluster_nodes:1:192.168.13.123
+#cluster_nodes:4:192.168.13.125
+#cluster_nodes:3:192.168.13.124
+# ==========================
+CLUSTER_NODES="$(grep -e 'cluster_nodes' $CLUSTER_CONF | cut -f'2 3' -d':')"
+#echo $( grep -e 'cluster_nodes' $CLUSTER_CONF | cut -f '2 3' -d ':' )
+#echo "$CLUSTER_NODES"
+
+declare -a NODES
+
+for line in "${CLUSTER_NODES[@]}"; do
+    echo $line
+#echo ${line##*:}
+#echo ${line%%:*}
+    NODES[ ${line%%%:*} ]="${line%%*:}"
+done
+
+#echo "${NODES[@]}"
+#\\\\\\\\\\\\\\\\\\\\\\\\\
+
 ## ======================
 G_LOG_FILE='/root/fncs.log'
 
